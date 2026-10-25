@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import NavLink from './NavLink';
-import Banner from './Banner';
+
 
 const Header = () => {
 
@@ -33,7 +33,7 @@ const Header = () => {
       </div>
       
       <NavLink/>
-       <Banner/>
+      
     </header>
         </div>
     );

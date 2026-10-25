@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import Banner from "./components/Banner";
 
 
 const notoSerifBengali = Noto_Serif_Bengali({
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Header/>
+         <Banner/>
         <main>{children}</main>
         <Footer/>
         </body>
