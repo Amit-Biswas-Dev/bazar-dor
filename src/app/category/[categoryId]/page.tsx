@@ -1,4 +1,4 @@
-import ItemsCard from '@/app/components/ItemsCard';
+import ItemsCard from '@/components/ItemsCard';
 
 const Page = async ({ params }) => {
     const { categoryId } = await params;

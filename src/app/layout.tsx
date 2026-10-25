@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono,Noto_Serif_Bengali } from "next/font/google";
 import "./globals.css";
 import { ReactNode } from "react";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import Banner from "./components/Banner";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import Banner from "../components/Banner";
 
 
 const notoSerifBengali = Noto_Serif_Bengali({

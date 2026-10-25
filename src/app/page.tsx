@@ -1,5 +1,5 @@
 
-import ItemsCard from "./components/ItemsCard";
+import ItemsCard from "../components/ItemsCard";
 
 export interface Product {
   id: number;
