@@ -3,46 +3,47 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 
 const SignUpPage = () => {
   const router = useRouter();
+  const [error, setError] = useState("");
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
 
     const formData = new FormData(e.currentTarget);
 
-    const user = {
+    const { error } = await authClient.signUp.email({
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       password: String(formData.get("password") ?? ""),
-      image: String(formData.get("image") ?? ""),
-    };
-
-    const { data, error } = await authClient.signUp.email({
-      ...user,
-      image: user.image || undefined,
+      image: String(formData.get("image") ?? "") || undefined,
       callbackURL: "/",
     });
 
-    if (data) {
-      console.log("Signed up successfully:", data);
-      router.push("/");
-      router.refresh();
+    if (error) {
+      setError(error.message || "Sign-up failed");
+      return;
     }
 
-    if (error) {
-      console.log("Sign up error:", error);
-    }
+    router.push("/");
+    router.refresh();
   };
 
-  async function handleGoogleSignUp() {
-        const data = await authClient.signIn.social({
-            provider: "google",
-            callbackURL: "/",
-        });
+  const socialSignUp = async (provider: "google" | "github") => {
+    setError("");
+
+    const { error } = await authClient.signIn.social({
+      provider,
+      callbackURL: "/",
+    });
+
+    if (error) {
+      setError(error.message || `${provider} sign-up failed`);
     }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -88,6 +89,8 @@ const SignUpPage = () => {
             required
           />
 
+          {error && <p className="text-sm text-error">{error}</p>}
+
           <button type="submit" className="btn btn-neutral mt-4 w-full">
             Sign Up
           </button>
@@ -96,10 +99,18 @@ const SignUpPage = () => {
 
           <button
             type="button"
-            onClick={handleGoogleSignUp}
+            onClick={() => socialSignUp("google")}
             className="btn w-full"
           >
             Sign Up With Google
+          </button>
+
+          <button
+            type="button"
+            onClick={() => socialSignUp("github")}
+            className="btn mt-2 w-full"
+          >
+            Sign Up With GitHub
           </button>
         </fieldset>
       </form>

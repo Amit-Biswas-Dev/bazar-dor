@@ -1,4 +1,5 @@
 
+import Link from "next/link";
 import type { Product } from "../app/page";
 
 interface ItemsCardProps {
@@ -9,7 +10,8 @@ export default function ItemsCard({ product }: ItemsCardProps) {
   const isUp = product.change.dir === "up";
 
   return (
-    <div className="card border border-base-50 ">
+    <Link href={`/items/${product.id}`}>
+      <div className="card border border-base-50 ">
 
 
       <div className="flex h-20 items-center ">
@@ -59,5 +61,6 @@ export default function ItemsCard({ product }: ItemsCardProps) {
        
       </div>
     </div>
+   </Link>
   );
 }

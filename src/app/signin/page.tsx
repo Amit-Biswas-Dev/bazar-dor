@@ -7,123 +7,92 @@ import React, { useState } from "react";
 
 const SignInPage = () => {
   const router = useRouter();
-
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage("");
-    setLoading(true);
+    setError("");
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
 
-    try {
-      const { error } = await authClient.signIn.email({
-        email,
-        password,
-        callbackURL: "/",
-      });
+    const { error } = await authClient.signIn.email({
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      callbackURL: "/",
+    });
 
-      if (error) {
-        setErrorMessage(error.message || "Invalid email or password.");
-        return;
-      }
-
-      router.push("/");
-      router.refresh();
-    } catch (error) {
-      console.error("Sign-in error:", error);
-      setErrorMessage("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+    if (error) {
+      setError(error.message || "Sign-in failed");
+      return;
     }
+
+    router.push("/");
+    router.refresh();
   };
 
-  const handleGoogleSignIn = async () => {
-    setErrorMessage("");
-    setGoogleLoading(true);
+  const socialSignIn = async (provider: "google" | "github") => {
+    setError("");
 
-    try {
-      const { error } = await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
+    const { error } = await authClient.signIn.social({
+      provider,
+      callbackURL: "/",
+    });
 
-      if (error) {
-        setErrorMessage(error.message || "Google sign-in failed.");
-        setGoogleLoading(false);
-      }
-    } catch (error) {
-      console.error("Google sign-in error:", error);
-      setErrorMessage("Unable to sign in with Google. Please try again.");
-      setGoogleLoading(false);
+    if (error) {
+      setError(error.message || `${provider} sign-in failed`);
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-base-100 px-4">
-      <div className="w-full max-w-sm">
-        <form onSubmit={onSubmit}>
-          <fieldset className="fieldset bg-base-200 border-base-300 rounded-box border p-6">
-            <legend className="fieldset-legend text-lg">Sign In</legend>
+      <form
+        onSubmit={onSubmit}
+        className="fieldset bg-base-200 border-base-300 rounded-box w-full max-w-sm border p-6"
+      >
+        <legend className="fieldset-legend text-lg">Sign In</legend>
 
-            <label className="label" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              className="input w-full"
-              placeholder="Email"
-              autoComplete="email"
-              required
-            />
+        <label className="label">Email</label>
+        <input
+          type="email"
+          name="email"
+          className="input w-full"
+          placeholder="Email"
+          required
+        />
 
-            <label className="label" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              className="input w-full"
-              placeholder="Password"
-              autoComplete="current-password"
-              required
-            />
+        <label className="label">Password</label>
+        <input
+          type="password"
+          name="password"
+          className="input w-full"
+          placeholder="Password"
+          required
+        />
 
-            {errorMessage && (
-              <p className="text-sm text-error" role="alert">
-                {errorMessage}
-              </p>
-            )}
+        {error && <p className="text-sm text-error">{error}</p>}
 
-            <button
-              type="submit"
-              className="btn btn-neutral mt-4 w-full"
-              disabled={loading || googleLoading}
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
+        <button type="submit" className="btn btn-neutral mt-4 w-full">
+          Sign In
+        </button>
 
-            <div className="divider">OR</div>
+        <div className="divider">OR</div>
 
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              className="btn btn-outline w-full"
-              disabled={loading || googleLoading}
-            >
-              {googleLoading ? "Redirecting..." : "Sign in with Google"}
-            </button>
-          </fieldset>
-        </form>
-      </div>
+        <button
+          type="button"
+          onClick={() => socialSignIn("google")}
+          className="btn btn-outline w-full"
+        >
+          Sign in with Google
+        </button>
+
+        <button
+          type="button"
+          onClick={() => socialSignIn("github")}
+          className="btn btn-outline mt-3 w-full"
+        >
+          Sign in with GitHub
+        </button>
+      </form>
     </div>
   );
 };

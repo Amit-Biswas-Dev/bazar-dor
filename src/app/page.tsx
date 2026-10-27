@@ -1,6 +1,6 @@
 
 import ItemsCard from "../components/ItemsCard";
-
+import Banner from "@/components/Banner";
 export interface Product {
   id: number;
   slug: string;
@@ -54,6 +54,8 @@ const increasedProducts = products.filter(
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
+     <Banner/>
+
      <div className="py-4 my-6">
        <div className="mb-8">
         <h1 className="text-3xl font-bold text-base-content">

@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import NavLink from './NavLink';
+import UserInfo from './UserInfo';
 
 
 const Header = () => {
@@ -28,7 +29,7 @@ const Header = () => {
         </div>
 
         {/* Right side: Auth buttons in Bangla */}
-        {/* <UserInfo/> */}
+        <UserInfo/>
        
       </div>
       
