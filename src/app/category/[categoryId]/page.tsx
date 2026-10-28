@@ -1,29 +1,53 @@
-import ItemsCard from '@/components/ItemsCard';
 
-const Page = async ({ params }) => {
-    const { categoryId } = await params;
+import ItemsCard from "@/components/ItemsCard";
+import { notFound } from "next/navigation";
+import type { ComponentProps } from "react";
 
-    const res = await fetch(
-        `https://openapi.programming-hero.com/api/bazardor/products?category=${categoryId}`
-    );
+interface PageProps {
+  params: Promise<{
+    categoryId: string;
+  }>;
+}
 
-    const result = await res.json();
+const Page = async ({ params }: PageProps) => {
+  const { categoryId } = await params;
 
-    const categoryInfo = Array.isArray(result) ? result : [];
+  const res = await fetch(
+    `https://openapi.programming-hero.com/api/bazardor/products?category=${encodeURIComponent(categoryId)}`,
+    {
+      cache: "no-store",
+    }
+  );
 
-    return (
-        <div className="p-4">
-            <h1 className="text-2xl font-bold mb-6">
-                {categoryInfo[0]?.categoryNameBn || 'পণ্যের তালিকা'}
-            </h1>
+  if (!res.ok) {
+    notFound();
+  }
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categoryInfo.map((info) => (
-                    <ItemsCard key={info.id} product={info} />
-                ))}
-            </div>
-        </div>
-    );
+  const result = await res.json();
+
+  const products = Array.isArray(result)
+    ? result
+    : Array.isArray(result.data)
+      ? result.data
+      : [];
+
+  if (products.length === 0) {
+    notFound();
+  }
+
+  return (
+    <div className="p-4">
+      <h1 className="mb-6 text-2xl font-bold">
+        {products[0]?.categoryNameBn || "পণ্যের তালিকা"}
+      </h1>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((product: ComponentProps<typeof ItemsCard>["product"]) => (
+          <ItemsCard key={product.id} product={product} />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default Page;

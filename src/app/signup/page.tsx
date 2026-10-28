@@ -3,117 +3,178 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import { useState } from "react";
+import { toast } from "react-toastify";
 
 const SignUpPage = () => {
   const router = useRouter();
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
+    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
 
-    const { error } = await authClient.signUp.email({
-      name: String(formData.get("name") ?? ""),
-      email: String(formData.get("email") ?? ""),
-      password: String(formData.get("password") ?? ""),
-      image: String(formData.get("image") ?? "") || undefined,
-      callbackURL: "/",
-    });
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const confirmPassword = String(
+      formData.get("confirmPassword") ?? ""
+    );
 
-    if (error) {
-      setError(error.message || "Sign-up failed");
+    if (password.length < 8) {
+      toast.error("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
+      setLoading(false);
       return;
     }
 
-    router.push("/");
-    router.refresh();
+    if (password !== confirmPassword) {
+      toast.error("দুটি পাসওয়ার্ড মিলছে না।");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+        callbackURL: "/",
+      });
+
+      if (error) {
+        toast.error(error.message || "অ্যাকাউন্ট তৈরি করা যায়নি।");
+        return;
+      }
+
+      toast.success("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!");
+
+      router.push("/");
+      router.refresh();
+    } catch {
+      toast.error("একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const socialSignUp = async (provider: "google" | "github") => {
-    setError("");
+    setLoading(true);
 
-    const { error } = await authClient.signIn.social({
-      provider,
-      callbackURL: "/",
-    });
+    try {
+      const { error } = await authClient.signIn.social({
+        provider,
+        callbackURL: "/",
+      });
 
-    if (error) {
-      setError(error.message || `${provider} sign-up failed`);
+      if (error) {
+        toast.error(error.message || `${provider} দিয়ে সাইন আপ করা যায়নি।`);
+      }
+    } catch {
+      toast.error("একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <form onSubmit={onSubmit}>
-        <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-          <legend className="fieldset-legend">Sign Up</legend>
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <h1 className="text-center text-3xl font-bold text-gray-900 sm:text-4xl">
+          অ্যাকাউন্ট তৈরি করুন
+        </h1>
 
-          <label className="label">Name</label>
-          <input
-            type="text"
-            name="name"
-            className="input w-full"
-            placeholder="Name"
-            autoComplete="name"
-            required
-          />
+        <p className="mt-3 text-center text-sm text-gray-500">
+          বিনা খরচে সাইন আপ করে সব বিস্তারিত দাম দেখুন।
+        </p>
 
-          <label className="label">Image URL</label>
-          <input
-            type="url"
-            name="image"
-            className="input w-full"
-            placeholder="Image URL"
-          />
+        <form onSubmit={onSubmit} className="mt-6 w-full">
+          <fieldset className="fieldset w-full rounded-box border border-base-300 bg-base-200 p-6">
+            <label className="label" htmlFor="name">
+              নাম
+            </label>
+            <input
+              id="name"
+              type="text"
+              name="name"
+              className="input w-full"
+              placeholder="যেমন: রহিম উদ্দিন"
+              autoComplete="name"
+              required
+            />
 
-          <label className="label">Email</label>
-          <input
-            type="email"
-            name="email"
-            className="input w-full"
-            placeholder="Email"
-            autoComplete="email"
-            required
-          />
+            <label className="label" htmlFor="email">
+              ইমেইল
+            </label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              className="input w-full"
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+            />
 
-          <label className="label">Password</label>
-          <input
-            type="password"
-            name="password"
-            className="input w-full"
-            placeholder="Password"
-            autoComplete="new-password"
-            required
-          />
+            <label className="label" htmlFor="password">
+              পাসওয়ার্ড
+            </label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              className="input w-full"
+              placeholder="কমপক্ষে ৮ অক্ষর"
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
 
-          {error && <p className="text-sm text-error">{error}</p>}
+            <label className="label" htmlFor="confirmPassword">
+              পাসওয়ার্ড নিশ্চিত করুন
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              name="confirmPassword"
+              className="input w-full"
+              placeholder="আবার লিখুন"
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
 
-          <button type="submit" className="btn btn-neutral mt-4 w-full">
-            Sign Up
-          </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-success mt-4 w-full"
+            >
+              {loading ? "অপেক্ষা করুন..." : "অ্যাকাউন্ট তৈরি করুন"}
+            </button>
 
-          <div className="divider">OR</div>
+            <div className="divider">অথবা</div>
 
-          <button
-            type="button"
-            onClick={() => socialSignUp("google")}
-            className="btn w-full"
-          >
-            Sign Up With Google
-          </button>
+            <button
+              type="button"
+              onClick={() => socialSignUp("google")}
+              disabled={loading}
+              className="btn w-full"
+            >
+              Google দিয়ে চালিয়ে যান
+            </button>
 
-          <button
-            type="button"
-            onClick={() => socialSignUp("github")}
-            className="btn mt-2 w-full"
-          >
-            Sign Up With GitHub
-          </button>
-        </fieldset>
-      </form>
+            <button
+              type="button"
+              onClick={() => socialSignUp("github")}
+              disabled={loading}
+              className="btn mt-2 w-full"
+            >
+              GitHub দিয়ে চালিয়ে যান
+            </button>
+          </fieldset>
+        </form>
+      </div>
     </div>
   );
 };

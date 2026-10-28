@@ -1,71 +1,128 @@
-"use client"
+
+"use client";
 
 import { authClient } from "@/lib/auth-client";
+import React, { useState } from "react";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
-const page = () => {
+const Page = () => {
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-     const {data: session} = authClient.useSession()
-        const user = session?.user;
+  const handleSignout = async () => {
+    try {
+      const { error } = await authClient.signOut();
 
+      if (error) {
+        toast.error(error.message || "সাইন আউট করা যায়নি।");
+        return;
+      }
 
-    const handleUpdateProfile = async (e:React.SubmitEvent<HTMLElement>)=>{
-        e.preventDefault()
-        const formData = new FormData(e.target);
-        const newUserData = {
-          name: String(formData.get("name") ?? ""),
-          image: String(formData.get("image") ?? ""),
-        }
-
-        await authClient.updateUser({
-            ...newUserData
-        })
+      toast.success("সফলভাবে সাইন আউট হয়েছে!");
+      router.push("/signin");
+      router.refresh();
+    } catch {
+      toast.error("সাইন আউট করার সময় সমস্যা হয়েছে।");
     }
-    return (
-        <div className="mt-5">
-            <div className="flex flex-col items-center gap-2">
-                    <div className="avatar">
-                    <div className="ring-primary ring-offset-base-100 w-10 rounded-full ring-2 ring-offset-2">
-                   <img alt="Tailwind-CSS-Avatar-component" src={user?.image as string} />
-                    </div>
-                    </div>
-                    <h2>{user?.name}</h2>
-                    <p>{user?.email}</p>
+  };
 
-                    {/* <button onClick ={handleSignout}  className="btn btn-error btn-xs">SignOut</button> */}
-                 </div>
+  const handleUpdateProfile = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+    setLoading(true);
 
-                  <form onSubmit={handleUpdateProfile}>
-        <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-          <legend className="fieldset-legend">Sign Up</legend>
+    const formData = new FormData(e.currentTarget);
 
-          <label className="label">Name</label>
-          <input
-            type="text"
-            name="name"
-            className="input w-full"
-            placeholder="Name"
-            required
-          />
+    const newUserData = {
+      name: String(formData.get("name") ?? "").trim(),
+    };
 
-          <label className="label">Image URL</label>
-          <input
-            type="url"
-            name="image"
-            className="input w-full"
-            placeholder="Image URL"
-          />
+    try {
+      const { error } = await authClient.updateUser(newUserData);
 
-          
+      if (error) {
+        toast.error(error.message || "প্রোফাইল আপডেট করা যায়নি।");
+        return;
+      }
 
+      toast.success("প্রোফাইল সফলভাবে আপডেট হয়েছে!");
+    } catch {
+      toast.error("প্রোফাইল আপডেট করার সময় সমস্যা হয়েছে।");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="flex w-full max-w-sm flex-col items-center gap-6">
+        <h2 className="text-2xl font-bold">আমার প্রোফাইল</h2>
+        <p>আপনার অ্যাকাউন্টের তথ্য এখানে দেখুন।</p>
 
-          <button type="submit" className="btn btn-neutral mt-4 w-full">
-            Update Profile
+        <div className="flex w-full items-center justify-between gap-3 rounded-box border border-base-300 bg-base-200 p-4">
+          <div className="avatar">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-green-100">
+              {user?.image ? (
+                <img
+                  alt="Profile avatar"
+                  src={user.image}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-green-700">
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h2 className="font-bold">{user?.name}</h2>
+            <p className="break-all text-sm">{user?.email}</p>
+          </div>
+
+          <button
+            onClick={handleSignout}
+            className="btn btn-error btn-xs"
+          >
+            Sign Out
           </button>
-        </fieldset>
-      </form>
         </div>
-    );
+
+        <form onSubmit={handleUpdateProfile} className="w-full">
+          <fieldset className="fieldset w-full rounded-box border border-base-300 bg-base-200 p-4">
+            <h2 className="text-2xl font-bold">তথ্য আপডেট</h2>
+
+            <label className="label" htmlFor="name">
+              নাম
+            </label>
+
+            <input
+              id="name"
+              type="text"
+              name="name"
+              defaultValue={user?.name ?? ""}
+              className="input w-full"
+              placeholder="আপনার নাম"
+              required
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-neutral mt-4 w-full"
+            >
+              {loading ? "আপডেট হচ্ছে..." : "আপডেট"}
+            </button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  );
 };
 
-export default page;
+export default Page;

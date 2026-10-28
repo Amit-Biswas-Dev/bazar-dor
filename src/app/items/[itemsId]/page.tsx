@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import React from "react";
 
 const DetailsCard = async ({
@@ -17,9 +18,13 @@ const DetailsCard = async ({
   const data = await res.json();
   const item = data.data ?? data;
 
+   if(!item){
+    notFound()
+  }
+
   const priceChange = item.today - item.yesterday;
 
-  // Calculate price summary
+ 
   const minMarket = item.markets.reduce((lowest: any, market: any) =>
     market.min < lowest.min ? market : lowest
   );
